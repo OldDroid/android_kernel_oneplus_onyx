@@ -330,7 +330,7 @@ static int F51_CUSTOM_DATA04;
 /***********for example of key event***********/
 #ifdef KEY_USE
 static int tpd_keys[VKNUMBER][5] = {
-	{KEY_MENU, 90, 2050, 180, 100},
+	{KEY_APPSELECT, 90, 2050, 180, 100},
 	{KEY_HOME, 500, 2050, 180, 100},
 	{KEY_BACK, 855, 2050, 180, 100},
 };
@@ -547,9 +547,9 @@ static struct device_attribute attrs_oppo[] = {
 
 /*---------------------------------------------Fuction Apply------------------------------------------------*/
 static ssize_t cap_vk_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf){
-      /* LEFT: search: CENTER: menu ,home:search 412, RIGHT: BACK */
+      /* LEFT: search: CENTER: APPSELECT ,home:search 412, RIGHT: BACK */
 	return sprintf(buf,
-        	__stringify(EV_KEY) ":" __stringify(KEY_MENU)   ":%d:%d:%d:%d"
+        	__stringify(EV_KEY) ":" __stringify(KEY_APPSELECT)   ":%d:%d:%d:%d"
         ":" __stringify(EV_KEY) ":" __stringify(KEY_HOMEPAGE)   ":%d:%d:%d:%d"
         ":" __stringify(EV_KEY) ":" __stringify(KEY_BACK)   ":%d:%d:%d:%d"
         "\n",LCD_WIDTH/6,button_map[2],button_map[0],button_map[1],LCD_WIDTH/2,button_map[2],button_map[0],button_map[1],LCD_WIDTH*5/6,button_map[2],button_map[0],button_map[1]);
@@ -567,7 +567,7 @@ static int synaptics_tpd_button_init(struct synaptics_ts_data *ts)
 	ts->kpd->name = TPD_DEVICE "-kpd";
 	atomic_set(&keypad_enable,1);
     set_bit(EV_KEY, ts->kpd->evbit);
-	__set_bit(KEY_MENU, ts->kpd->keybit);
+	__set_bit(KEY_APPSELECT, ts->kpd->keybit);
 	__set_bit(KEY_HOME, ts->kpd->keybit);
 	__set_bit(KEY_BACK, ts->kpd->keybit);
 	ts->kpd->id.bustype = BUS_HOST;
@@ -581,7 +581,7 @@ static int synaptics_tpd_button_init(struct synaptics_ts_data *ts)
 		input_free_device(ts->kpd);
 	}
     set_bit(EV_KEY, ts->kpd->evbit);
-	__set_bit(KEY_MENU, ts->kpd->keybit);
+	__set_bit(KEY_APPSELECT, ts->kpd->keybit);
 	__set_bit(KEY_HOME, ts->kpd->keybit);
 	__set_bit(KEY_BACK, ts->kpd->keybit);
 
@@ -1648,8 +1648,8 @@ static void int_touch_s3203(struct synaptics_ts_data *ts)
 }
 #endif
 
-#define REP_KEY_MENU (atomic_read(&key_reverse)?(KEY_BACK):(KEY_MENU))
-#define REP_KEY_BACK (atomic_read(&key_reverse)?(KEY_MENU):(KEY_BACK))
+#define REP_KEY_APPSELECT (atomic_read(&key_reverse)?(KEY_BACK):(KEY_APPSELECT))
+#define REP_KEY_BACK (atomic_read(&key_reverse)?(KEY_APPSELECT):(KEY_BACK))
 
 static bool insert_point =0;//for swipe the control panel
 static void int_touch_s3508(struct synaptics_ts_data *ts,bool insert_flag)
@@ -1777,15 +1777,15 @@ static void int_key_report_s3508(struct synaptics_ts_data *ts)
 	}else{
 			i2c_smbus_write_byte_data(ts->client, 0xff, 0x02);
 		ret = i2c_smbus_read_byte_data(ts->client, F1A_0D_DATA00);
-			if((ret & 0x01) && !(ts->pre_btn_state & 0x01))//menu
+			if((ret & 0x01) && !(ts->pre_btn_state & 0x01))//APPSELECT
 			{
 				if( 0 == atomic_read(&is_touch) ){
-					input_report_key(ts->input_dev, REP_KEY_MENU, 1);
+					input_report_key(ts->input_dev, REP_KEY_APPSELECT, 1);
 					input_sync(ts->input_dev);
                                    atomic_set(&is_key_touch, 1);
 				}
 			}else if(!(ret & 0x01) && (ts->pre_btn_state & 0x01)){
-				input_report_key(ts->input_dev, REP_KEY_MENU, 0);
+				input_report_key(ts->input_dev, REP_KEY_APPSELECT, 0);
 				input_sync(ts->input_dev);
                             atomic_set(&is_key_touch, 0);
 			}
@@ -1916,9 +1916,9 @@ static void synaptics_ts_work_func(struct work_struct *work)
         				i2c_smbus_write_byte_data(ts->client, 0xff, 0x00);
         				delay_qt_ms(60);
 
-        				if(ts->pre_btn_state&0x01)//menu
+        				if(ts->pre_btn_state&0x01)//APPSELECT
         				{
-        					input_report_key(ts->input_dev, KEY_MENU, 0);
+        					input_report_key(ts->input_dev, KEY_APPSELECT, 0);
         				}
         				if(ts->pre_btn_state&0x02)//home
         				{
@@ -2066,12 +2066,12 @@ static int cp_keys_status_write_func(struct file *file, const char __user *buf,
 
 	if (new_status == 0) {
 		printk("KEY_STATUS: disable!\n");
-		clear_bit(KEY_MENU, ts->input_dev->keybit);
+		clear_bit(KEY_APPSELECT, ts->input_dev->keybit);
 		clear_bit(KEY_HOMEPAGE, ts->input_dev->keybit);
 		clear_bit(KEY_BACK, ts->input_dev->keybit);
 	} else if (new_status == 1) {
 		printk("KEY_STATUS: enable!\n");
-		set_bit(KEY_MENU, ts->input_dev->keybit);
+		set_bit(KEY_APPSELECT, ts->input_dev->keybit);
 		set_bit(KEY_HOMEPAGE, ts->input_dev->keybit);
 		set_bit(KEY_BACK, ts->input_dev->keybit);
 	} else {
@@ -3500,7 +3500,7 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 	set_bit(KEY_GESTURE_LEFT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_RIGHT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
-		set_bit(KEY_MENU , ts->input_dev->keybit);
+		set_bit(KEY_APPSELECT , ts->input_dev->keybit);
 		set_bit(KEY_HOMEPAGE , ts->input_dev->keybit);
 		set_bit(KEY_BACK , ts->input_dev->keybit);
 #endif
@@ -3516,7 +3516,7 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 #endif
 	set_bit(BTN_TOUCH, ts->input_dev->keybit);
 	set_bit(KEY_SEARCH, ts->input_dev->keybit);
-	set_bit(KEY_MENU, ts->input_dev->keybit);
+	set_bit(KEY_APPSELECT, ts->input_dev->keybit);
 	set_bit(KEY_HOME, ts->input_dev->keybit);
 	set_bit(KEY_BACK, ts->input_dev->keybit);
 	input_set_drvdata(ts->input_dev, ts);
@@ -4946,7 +4946,7 @@ static int synaptics_ts_suspend(struct device *dev)
 	atomic_set(&is_touch, 0);
        atomic_set(&is_key_touch, 0);
 /***********report Up key when suspend********/
-	input_report_key(ts->input_dev, KEY_MENU, 0);
+	input_report_key(ts->input_dev, KEY_APPSELECT, 0);
 	input_sync(ts->input_dev);
 	input_report_key(ts->input_dev, KEY_HOMEPAGE, 0);
 	input_sync(ts->input_dev);
